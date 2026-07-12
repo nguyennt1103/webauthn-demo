@@ -26,9 +26,7 @@ authenticateBtn.addEventListener("click", async () => {
     const credentialJson = credential.toJSON();
 
     // send the credential to the server
-    const verificationResponse = await post("/login/webauthn", {
-        body: credentialJson
-    });
+    const verificationResponse = await post("/login/webauthn", {}, credentialJson);
 
     if (!verificationResponse.ok) {
         throw new Error("Failed to authenticate the credential");

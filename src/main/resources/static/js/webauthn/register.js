@@ -26,12 +26,10 @@ registerBtn.addEventListener("click", async () => {
     const credentialJson = credential.toJSON();
 
     // send the credential to the server
-    const verificationResponse = await post("/webauthn/register", {
-        body: {
-            publicKey: {
-                credential: credentialJson,
-                label: "localhost"
-            }
+    const verificationResponse = await post("/webauthn/register", {}, {
+        publicKey: {
+            credential: credentialJson,
+            label: "localhost"
         }
     });
 
