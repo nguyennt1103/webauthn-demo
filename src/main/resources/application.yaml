@@ -4,3 +4,7 @@ spring:
   security:
     user:
       password: password
+web-authn:
+  rp-id: localhost
+  allowed-origins:
+    - http://localhost:8080

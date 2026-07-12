@@ -10,14 +10,20 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 class SecurityConfig {
 
+    private final WebAuthnProperties webAuthnProperties;
+
+    SecurityConfig(WebAuthnProperties webAuthnProperties) {
+        this.webAuthnProperties = webAuthnProperties;
+    }
+
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http
                 .formLogin(form -> form
                         .loginPage("/login").permitAll())
                 .webAuthn(webAuthn -> webAuthn
-                        .rpId("localhost")
-                        .allowedOrigins("http://localhost:8080"))
+                        .rpId(webAuthnProperties.getRpId())
+                        .allowedOrigins(webAuthnProperties.getAllowedOrigins()))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/login/**", "/error").permitAll()
                         .requestMatchers("/webjars/**", "/js/**").permitAll()
