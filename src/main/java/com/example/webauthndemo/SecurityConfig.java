@@ -25,7 +25,7 @@ class SecurityConfig {
                         .rpId(webAuthnProperties.getRpId())
                         .allowedOrigins(webAuthnProperties.getAllowedOrigins()))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/login/**", "/error").permitAll()
+                        .requestMatchers("/login/**", "/error", "/actuator/health").permitAll()
                         .requestMatchers("/webjars/**", "/js/**").permitAll()
                         .anyRequest().authenticated());
 
