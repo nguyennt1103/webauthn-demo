@@ -1,17 +1,9 @@
+import {post} from "../http.js";
+
 const authenticateBtn = document.getElementById("authenticate");
 authenticateBtn.addEventListener("click", async () => {
-    // setup csrf value and header
-    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
-    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
-
     // get spring security request options
-    const optionsResponse = await fetch("/webauthn/authenticate/options", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            [csrfHeader]: csrfToken
-        }
-    });
+    const optionsResponse = await post("/webauthn/authenticate/options");
 
     // check error
     if (!optionsResponse.ok) {
@@ -33,13 +25,8 @@ authenticateBtn.addEventListener("click", async () => {
     const credentialJson = credential.toJSON();
 
     // send the credential to the server
-    const verificationResponse = await fetch("/login/webauthn", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            [csrfHeader]: csrfToken
-        },
-        body: JSON.stringify(credentialJson)
+    const verificationResponse = await post("/login/webauthn", {
+        body: credentialJson
     });
 
     if (!verificationResponse.ok) {
