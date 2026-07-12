@@ -1,3 +1,6 @@
 spring:
   application:
     name: webauthn-demo
+  security:
+    user:
+      password: password

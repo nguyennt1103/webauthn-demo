@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.8/css/bootstrap.min.css}">
+    <script th:src="@{/webjars/bootstrap/5.3.8/js/bootstrap.bundle.min.js}"></script>
+    <title>Sign in</title>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <form th:action="@{/login}" method="post">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input id="username" name="username" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" name="password" id="password" class="form-control">
+                </div>
+                <div class="d-flex gap-3">
+                    <button type="submit" class="btn btn-primary">Sign in</button>
+                    <button type="button" id="authenticate" class="btn btn-primary">Passkey</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type="module">
+    const authenticateBtn = document.getElementById("authenticate");
+    authenticateBtn.addEventListener("click", async () => {
+        // setup csrf value and header
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+        // get spring security request options
+        const optionsResponse = await fetch("/webauthn/authenticate/options", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                [csrfHeader]: csrfToken
+            }
+        });
+
+        // check error
+        if (!optionsResponse.ok) {
+            throw new Error("Failed to get request options");
+        }
+
+        // parse json
+        const optionsJson = await optionsResponse.json();
+
+        // WebAuthn parsing support
+        const pkCredRequestOptions = PublicKeyCredential.parseRequestOptionsFromJSON(optionsJson);
+
+        // call navigator.credentials.get
+        const credential = await navigator.credentials.get({
+            publicKey: pkCredRequestOptions
+        });
+
+        // base64url parse
+        const credentialJson = credential.toJSON();
+
+        // send the credential to the server
+        const verificationResponse = await fetch("/login/webauthn", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify(credentialJson)
+        });
+
+        if (!verificationResponse.ok) {
+            throw new Error("Failed to authenticate the credential");
+        }
+
+        const verificationJson = await verificationResponse.json();
+        console.log(verificationJson)
+
+        if (!(verificationJson && verificationJson.authenticated && verificationJson.redirectUrl)) {
+            throw new Error("Authentication process is failure");
+        }
+
+        window.location.href = verificationJson.redirectUrl;
+    })
+</script>
+</body>
+</html>
