@@ -14,7 +14,8 @@ authenticateBtn.addEventListener("click", async () => {
     const optionsJson = await optionsResponse.json();
 
     // WebAuthn parsing support
-    const pkCredRequestOptions = PublicKeyCredential.parseRequestOptionsFromJSON(optionsJson);
+    const pkCredRequestOptions =
+        PublicKeyCredential.parseRequestOptionsFromJSON(optionsJson);
 
     // call navigator.credentials.get
     const credential = await navigator.credentials.get({

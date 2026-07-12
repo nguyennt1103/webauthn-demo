@@ -14,7 +14,8 @@ registerBtn.addEventListener("click", async () => {
     const optionsJson = await optionsResponse.json();
 
     // WebAuthn parsing support
-    const pkCredCreationOptions = PublicKeyCredential.parseCreationOptionsFromJSON(optionsJson);
+    const pkCredCreationOptions =
+        PublicKeyCredential.parseCreationOptionsFromJSON(optionsJson);
 
     // call navigator.credentials.create
     const credential = await navigator.credentials.create({
