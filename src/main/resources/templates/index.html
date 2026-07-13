@@ -10,6 +10,7 @@
     <title>WebAuthn demo</title>
 </head>
 <body>
+<div th:replace="~{fragments/header :: header}"></div>
 <button id="register" class="btn btn-primary">Register</button>
 <script type="module" th:src="@{/js/webauthn/register.js}"></script>
 </body>
