@@ -11,7 +11,11 @@
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
-<button id="register" class="btn btn-primary">Register</button>
+
+<div class="container mt-3">
+    <h1 class="ps-1">WebAuthn demo</h1>
+</div>
+
 <script type="module" th:src="@{/js/webauthn/register.js}"></script>
 </body>
 </html>
