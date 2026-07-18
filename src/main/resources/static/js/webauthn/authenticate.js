@@ -1,7 +1,30 @@
 import {post} from "../http.js";
+import {resetPopups, setError} from "./pop-up.js";
 
-const authenticateBtn = document.getElementById("authenticate");
-authenticateBtn.addEventListener("click", async () => {
+(async () => {
+    resetPopups();
+
+    if (!window.PublicKeyCredential) {
+        setError("WebAuthn is not supported");
+        return;
+    }
+
+    document.getElementById("authenticate").addEventListener("click", async () => {
+        await authenticateOnError();
+    });
+})();
+
+async function authenticateOnError() {
+    try {
+        const pkCredRequestOptions = await getRequestOptions();
+        window.location.href = await verifyCredential(pkCredRequestOptions);
+    } catch (e) {
+        console.error(e);
+        setError(e.message);
+    }
+}
+
+async function getRequestOptions() {
     // get spring security request options
     const optionsResponse = await post("/webauthn/authenticate/options");
 
@@ -14,18 +37,30 @@ authenticateBtn.addEventListener("click", async () => {
     const optionsJson = await optionsResponse.json();
 
     // WebAuthn parsing support
-    const pkCredRequestOptions =
-        PublicKeyCredential.parseRequestOptionsFromJSON(optionsJson);
+    if (!PublicKeyCredential.parseRequestOptionsFromJSON) {
+        throw new Error("WebAuthn browser does not support function parseRequestOptionsFromJSON");
+    }
+    return PublicKeyCredential.parseRequestOptionsFromJSON(optionsJson);
+}
 
+async function verifyCredential(pkCredRequestOptions) {
+    let credential;
     // call navigator.credentials.get
-    const credential = await navigator.credentials.get({
-        publicKey: pkCredRequestOptions
-    });
+    try {
+        credential = await navigator.credentials.get({
+            publicKey: pkCredRequestOptions
+        });
+    } catch (e) {
+        throw new Error(`Authentication failed. Call to navigator.credentials.get failed: ${e.message}`);
+    }
+
+    if (!credential.toJSON) {
+        throw new Error("WebAuthn browser does not support function PublicKeyCredentialRequestOptions.toJSON")
+    }
 
     // base64url parse
     const credentialJson = credential.toJSON();
 
-    // send the credential to the server
     const verificationResponse = await post("/login/webauthn", {}, credentialJson);
 
     if (!verificationResponse.ok) {
@@ -33,11 +68,10 @@ authenticateBtn.addEventListener("click", async () => {
     }
 
     const verificationJson = await verificationResponse.json();
-    console.log(verificationJson)
 
     if (!(verificationJson && verificationJson.authenticated && verificationJson.redirectUrl)) {
         throw new Error("Authentication process is failure");
     }
 
-    window.location.href = verificationJson.redirectUrl;
-});
+    return verificationJson.redirectUrl;
+}
